@@ -9,100 +9,85 @@ static const char NULL_CHAR = 0;
 static const char CHAR_RANGE_START = 0x20;
 static const char CHAR_RANGE_END = 0x7E;
 
-TypingMachine::TypingMachine() : m_node(NULL_CHAR), m_cursor(&m_node), m_size(0) {
+TypingMachine::TypingMachine()
+    : m_start(new Node(NULL_CHAR)),
+      m_cursor(m_start), m_size(0) {
+    m_end = m_start->InsertNextNode(NULL_CHAR);
+}
+
+TypingMachine::~TypingMachine() {
+    while (m_start->EraseNextNode()) {
+        // do nothing
+    }
+    delete m_start;
 }
 
 void TypingMachine::HomeKey() {
-	m_cursor = &m_node;
+    m_cursor = m_start;
 }
 
 void TypingMachine::EndKey() {
-	while (true)
-	{
-		Node* nextNode = m_cursor->GetNextNode();
-		if (!nextNode)
-		{
-			break;
-		}
-		m_cursor = nextNode;
-	}
+    m_cursor = m_end->GetPreviousNode();
 }
 
 void TypingMachine::LeftKey() {
-	if (m_cursor == &m_node)
-	{
-		return;
-	}
-	Node* prevNode = m_cursor->GetPreviousNode();
-	if (!prevNode)
-	{
-		m_cursor = &m_node;
-		return;
-	}
-	m_cursor = prevNode;
+    if (m_cursor == m_start)
+    {
+        return;
+    }
+    m_cursor = m_cursor->GetPreviousNode();
 }
 
 void TypingMachine::RightKey() {
-	Node* nextNode = m_cursor->GetNextNode();
-	if (!nextNode)
-	{
-		return;
-	}
-	m_cursor = nextNode;
+    Node* nextNode = m_cursor->GetNextNode();
+    if (nextNode == m_end)
+    {
+        return;
+    }
+    m_cursor = nextNode;
 }
 
 bool TypingMachine::TypeKey(char key) {
-	if (m_size >= MAX_STRING_LENGTH)
-	{
-		return false;
-	}
-	if (key < CHAR_RANGE_START || key > CHAR_RANGE_END)
-	{
-		return false;
-	}
-	m_cursor = m_cursor->InsertNextNode(key);
-	m_size++;
-	return true;
+    if (m_size >= MAX_STRING_LENGTH)
+    {
+        return false;
+    }
+    if (key < CHAR_RANGE_START || key > CHAR_RANGE_END)
+    {
+        return false;
+    }
+    m_cursor = m_cursor->InsertNextNode(key);
+    m_size++;
+    return true;
 }
 
 bool TypingMachine::EraseKey() {
-	if (m_size == 0)
-	{
-		return false;
-	}
-	if (m_cursor == &m_node)
-	{
-		return false;
-	}
-	m_size--;
-	Node* prevNode = m_cursor->GetPreviousNode();
-	if (!prevNode)
-	{
-		prevNode = &m_node;
-	}
-	assert(prevNode);
-	bool result = prevNode->EraseNextNode();
-	assert(result);
-	m_cursor = prevNode;
-	return true;
+    if (m_cursor == m_start)
+    {
+        return false;
+    }
+    Node* next = m_cursor->GetNextNode();
+    assert(next);
+    bool result = next->ErasePreviousNode();
+    assert(result);
+    m_cursor = next->GetPreviousNode();
+    m_size--;
+    return true;
 }
 
 std::string TypingMachine::Print(char separator) {
-	std::stringstream s;
+    std::stringstream s;
 
-	if (&m_node == m_cursor)
-	{
-		s << separator;
-	}
+    if (m_start == m_cursor && separator != 0) {
+        s << separator;
+    }
 
-	Node* it = &m_node;
-	while (it = it->GetNextNode())
-	{
-		s << it->GetData();
-		if (it == m_cursor)
-		{
-			s << separator;
-		}
-	}
-	return s.str();
+    Node* node;
+    for (node=m_start->GetNextNode(); node!=m_end; node = node->GetNextNode()) {
+        s << node->GetData();
+        if (node == m_cursor && separator != 0) {
+            s << separator;
+        }
+    }
+    return s.str();
 }

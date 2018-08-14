@@ -15,8 +15,7 @@ class Node {
   bool EraseNextNode();
 
 private:
-	bool isEnd() const;
-	static bool EraseNode(Node* node);
+	static void EraseNode(Node* node);
 
 	Node* m_next;
 	Node* m_prev;

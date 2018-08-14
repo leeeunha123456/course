@@ -2,7 +2,7 @@
 
 #include "node.h"
 
-Node::Node(char data) : m_next(this), m_prev(this), m_data(data) {
+Node::Node(char data) : m_next(nullptr), m_prev(nullptr), m_data(data) {
 }
 
 char Node::GetData() {
@@ -10,28 +10,21 @@ char Node::GetData() {
 }
 
 Node* Node::GetPreviousNode() {
-	if (m_prev->isEnd())
-	{
-		return nullptr;
-	}
 	return m_prev;
 }
 
 Node* Node::GetNextNode() {
-	if (m_next->isEnd())
-	{
-		return nullptr;
-	}
 	return m_next;
 }
 
 Node* Node::InsertPreviousNode(char data) {
 	Node* node = new Node(data);
-	Node* prev = m_prev;
-	Node* next = this;
 	node->m_prev = m_prev;
 	node->m_next = this;
-	m_prev->m_next = node;
+	if (m_prev)
+	{
+		m_prev->m_next = node;
+	}
 	m_prev = node;
 	return node;
 }
@@ -40,38 +33,44 @@ Node* Node::InsertNextNode(char data) {
 	Node* node = new Node(data);
 	node->m_prev = this;
 	node->m_next = m_next;
-	m_next->m_prev = node;
+	if (m_next)
+	{
+		m_next->m_prev = node;
+	}
 	m_next = node;
 	return node;
 }
 
 bool Node::ErasePreviousNode() {
-	if (isEnd())
-	{
-		return false;
-	}
-	return EraseNode(m_prev);
+	if (!m_prev)
+    {
+        return false;
+    }
+	EraseNode(m_prev);
+    return true;
 }
 
 bool Node::EraseNextNode() {
-	return EraseNode(m_next);
+    if (!m_next)
+    {
+        return false;
+    }
+	EraseNode(m_next);
+    return true;
 }
 
-bool Node::EraseNode(Node* node)
+void Node::EraseNode(Node* node)
 {
-	if (node->isEnd())
-	{
-		return false;
-	}
 	Node* prev = node->m_prev;
 	Node* next = node->m_next;
-	prev->m_next = next;
-	next->m_prev = prev;
+    if (prev)
+    {
+        prev->m_next = next;
+    }
+    if (next)
+    {
+        next->m_prev = prev;
+    }
 	delete node;
-	return true;
 }
 
-bool Node::isEnd() const
-{
-	return m_data == 0;
-}
